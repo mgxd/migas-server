@@ -1,4 +1,3 @@
-import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -35,28 +34,19 @@ async def lifespan(app: FastAPI):
     await app.requests.close()
 
 
-def _create_app() -> FastAPI:
-    app = FastAPI(title="migas", version=__version__, lifespan=lifespan)
-    graphql_app = GraphQLRouter(SCHEMA)
-    app.include_router(graphql_app, prefix="/graphql")
+app = FastAPI(title="migas", version=__version__, lifespan=lifespan)
 
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+graphql_app = GraphQLRouter(SCHEMA)
+app.include_router(graphql_app, prefix="/graphql")
 
-    # only add scout monitoring if environmental variables are present
-    if all(os.getenv(x) for x in ("SCOUT_NAME", "SCOUT_MONITOR", "SCOUT_KEY")):
-        from scout_apm.async_.starlette import ScoutMiddleware
-
-        app.add_middleware(ScoutMiddleware)
-
-    return app
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
-app = _create_app()
 # TODO: Create separate app for frontend?
 static = str(__root__ / '..' / 'static')
 app.mount("/static", StaticFiles(directory=static), name="static")

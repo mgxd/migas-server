@@ -27,7 +27,8 @@ gunicorn)
     CMD="python -m gunicorn -k $WORKER_CLASS -c $GUNICORN_CONF $APP_MODULE"
     ;;
 uvicorn)
-    CMD="python -m uvicorn $APP_MODULE $@"
+    export UVICORN_LOG=${UVICORN_LOG:-/src/deploy/docker/uvicorn_logging.yml}
+    CMD="python -m uvicorn $APP_MODULE --log-config $UVICORN_LOG --use-colors $@"
     ;;
 *)
     echo "No deployment server was specified"
